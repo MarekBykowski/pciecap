@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pciecap"
+version = "0.1.0"
+description = "PCIe config space and capability parser"
+authors = [{ name = "Marek" }]
+requires-python = ">=3.8"
+
+[project.scripts]
+pciecap = "pciecap.cli:main"
