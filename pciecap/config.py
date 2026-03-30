@@ -2,7 +2,6 @@ import struct
 
 CONFIG_SIZE = 4096
 
-
 class PCIConfig:
     def __init__(self, bdf):
         self.bdf = bdf

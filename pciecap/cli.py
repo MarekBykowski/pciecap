@@ -2,7 +2,7 @@ import sys
 from .config import PCIConfig
 from .caps.legacy import walk_legacy_caps
 from .caps.extended import walk_extended_caps
-
+from .caps.dvsec import DVSEC
 
 def main():
     if len(sys.argv) != 2:
@@ -26,7 +26,11 @@ def main():
 
     print("\n[Extended Capabilities]")
     for cap in walk_extended_caps(cfg):
-        print(f"  - {cap}")
+        if isinstance(cap, DVSEC):
+            cap.dump_raw()
+            cap.dump_decoded()
+        else:
+            print(f"[{cap}]")
 
 
 if __name__ == "__main__":
