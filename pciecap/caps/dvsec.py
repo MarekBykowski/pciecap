@@ -1,7 +1,11 @@
 from .base import ExtendedCapability
 
 class DVSEC(ExtendedCapability):
+    type_name = "dvsec"
+
     def __init__(self, cfg, offset, version, next_ptr):
+        # Does it make sense to hardcode cap_id?
+        # It is read and set in the walker routine calling this constructor
         super().__init__(cfg, offset, 0x0023, version, next_ptr)
 
         # --- Raw fields ---
@@ -14,6 +18,13 @@ class DVSEC(ExtendedCapability):
 
         # Header2
         self.dvsec_id = cfg.read16(offset + 8)
+
+        # Vendor-specific registers (everything after Header2)
+        self.vsec_start = offset + 0x0A  # spec-correct ?
+        self.vsec_end = offset + self.length
+        # protect against malformed length
+        self.vsec_end = min(self.vsec_end, len(cfg.data))
+        self.vendor_data = cfg.data[self.vsec_start:self.vsec_end]
 
     # -----------------------------
     # Pretty dump (like debugger)
@@ -58,6 +69,13 @@ class DVSEC(ExtendedCapability):
         print(f"  DVSEC Header2:")
         print(f"    dvsec_id : 0x{self.dvsec_id:04x}")
 
+        print(f"  Vendor-Specific Registers:")
+        raw = " ".join(f"{b:02x}" for b in self.vendor_data)
+        if raw:
+            print(f"    raw: {raw}")
+        else:
+            print("    <none>")
+
     # -----------------------------
     # String (short summary)
     # -----------------------------
@@ -67,3 +85,29 @@ class DVSEC(ExtendedCapability):
                 f"id=0x{self.dvsec_id:04x} "
                 f"rev={self.rev} "
                 f"len={self.length}")
+
+    def to_dict(self):
+        return {
+            "type": self.type_name,
+            "offset": f"0x{self.offset:03x}",
+
+            "ExtCap": {
+                "cap_id": f"0x{self.cap_id:04x}",
+                "version": self.version,
+                "next_ptr": f"0x{self.next_ptr:03x}",
+            },
+
+            "DVSEC Header1": {
+                "vendor": f"0x{self.vendor:04x}",
+                "rev": self.rev,
+                "length": self.length,
+            },
+
+            "DVSEC Header2": {
+                "dvsec_id": f"0x{self.dvsec_id:04x}",
+            },
+
+            "Vendor-Specific Registers": {
+                "raw": " ".join(f"{b:02x}" for b in self.vendor_data)
+            },
+        }

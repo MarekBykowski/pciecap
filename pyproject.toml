@@ -9,5 +9,11 @@ description = "PCIe config space and capability parser"
 authors = [{ name = "Marek" }]
 requires-python = ">=3.8"
 
+# no mandatory dependencies
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["PyYAML"]
+
 [project.scripts]
 pciecap = "pciecap.cli:main"

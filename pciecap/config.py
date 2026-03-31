@@ -17,3 +17,24 @@ class PCIConfig:
 
     def read32(self, off):
         return struct.unpack_from("<I", self.data, off)[0]
+
+    def read8o(self, off):
+        val = self.read8(off)
+        return {
+            "offset": f"0x{off:03x}",
+            "value": f"0x{val:02x}"
+        }
+
+    def read16o(self, off):
+        val = self.read16(off)
+        return {
+            "offset": f"0x{off:03x}",
+            "value": f"0x{val:04x}"
+        }
+
+    def read32o(self, off):
+        val = self.read32(off)
+        return {
+            "offset": f"0x{off:03x}",
+            "value": f"0x{val:08x}"
+        }

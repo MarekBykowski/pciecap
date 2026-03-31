@@ -1,20 +1,43 @@
 PYTHON := python3
-PYTHONPATH := $(shell $(PYTHON) -c "import site; print(site.getusersitepackages())")
+TARGET := qr
+TARGET_TMP := /tmp
 
-all: build
+WHEEL = $(shell ls -t dist/*.whl 2>/dev/null | head -n1)
 
 build: clean
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m build
+	$(PYTHON) -m build
+
+# -----------------------
+#   Local install
+# -----------------------
+
+install-local: build
+	@echo "Installing locally..."
+	sudo $(PYTHON) -m pip install $(WHEEL) --force-reinstall --prefix=/usr
+
+uninstall-local: clean
+	@echo "Uninstalling pciecap (if installed)..."
+	-sudo $(PYTHON) -m pip uninstall -y pciecap
+
+install-dir:
+	@cd /tmp && python3 -c "import pciecap; print(pciecap.__file__)"
+
+# -----------------------
+#   Remote install
+# -----------------------
 
 scp: build
-	scp dist/*.whl qr:/tmp/
-	@echo -e "Install on the target with:\n\t pip3 install --force-reinstall /tmp/pciecap-0.1.0-py3-none-any.whl"
-	@echo -e "Check what got installed:\n\t python3 -c \"import pciecap; print(pciecap.__file__)\""
+	@echo "Copying $(WHEEL) to $(TARGET)..."
+	scp $(WHEEL) $(TARGET):$(TARGET_TMP)/
 
-install-local:
-	$(PYTHON) -m pip install .
+remote-install:
+	@echo "Installing on $(TARGET)..."
+	ssh $(TARGET) "python3 -m pip install --force-reinstall $(TARGET_TMP)/$(notdir $(WHEEL))"
+
+deploy: scp remote-install
+	@echo "Done."
 
 clean:
 	rm -rf build dist pciecap.egg-info
 
-.PHONY: all build clear
+.PHONY: build install-local scp remote-install deploy clean
