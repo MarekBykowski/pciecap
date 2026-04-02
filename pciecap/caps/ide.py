@@ -1,4 +1,3 @@
-import yaml
 from .base import ExtendedCapability
 
 def _yn(v):
