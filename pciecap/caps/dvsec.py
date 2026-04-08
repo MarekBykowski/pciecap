@@ -36,14 +36,17 @@ class DVSEC(ExtendedCapability):
         start = self.offset
         end = start + length
 
-        print(f"DVSEC @0x{self.offset:03x} RAW:")
+        print(f"DVSEC @0x{self.offset:03x} RAW (presented as 32-bit value 0x40302010 and byte sequence (10 20 30 40)):")
+        for addr in range(start, end, 4):
+            chunk = self.cfg.data[addr:min(addr + 4, end)]
 
-        for addr in range(start, end, 16):
-            chunk = self.cfg.data[addr:min(addr + 16, end)]
-            # hex bytes (memory order)
+            # Convert bytes to int (little-endian)
+            val = int.from_bytes(chunk, "little")
+
+            # Format bytes
             hex_bytes = " ".join(f"{b:02x}" for b in chunk)
 
-            print(f"{addr:08x}  {hex_bytes}")
+            print(f"{addr:08x}: 0x{val:08x} ({hex_bytes})")
 
     # -----------------------------
     # Decode fields (spec-aligned)
@@ -67,14 +70,22 @@ class DVSEC(ExtendedCapability):
         print(f"    length   : {self.length}")
 
         print(f"  DVSEC Header2:")
-        print(f"    dvsec_id : 0x{self.dvsec_id:04x}")
-
         print(f"  Vendor-Specific Registers:")
-        raw = " ".join(f"{b:02x}" for b in self.vendor_data)
-        if raw:
-            print(f"    raw: {raw}")
-        else:
+        if not self.vendor_data:
             print("    <none>")
+        else:
+            for i in range(0, len(self.vendor_data), 4):
+                chunk = self.vendor_data[i:i+4]
+
+                # pad if needed
+                if len(chunk) < 4:
+                    chunk = chunk + bytes(4 - len(chunk))
+
+                val = int.from_bytes(chunk, "little")
+                hex_bytes = " ".join(f"{b:02x}" for b in chunk)
+
+                print(f"    [{i:02x}]  0x{val:08x} ({hex_bytes})")
+
 
     # -----------------------------
     # String (short summary)

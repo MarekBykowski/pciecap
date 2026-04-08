@@ -38,3 +38,11 @@ class PCIConfig:
             "offset": f"0x{off:03x}",
             "value": f"0x{val:08x}"
         }
+    """
+    Format a 32-bit integer as little-endian byte sequence.
+    Example:
+        0xb2010030 -> "30 00 01 b2"
+    """
+    def fmt32(self, val):
+        b = val.to_bytes(4, "little")
+        return " ".join(f"{x:02x}" for x in b)

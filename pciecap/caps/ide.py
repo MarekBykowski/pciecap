@@ -68,14 +68,18 @@ class IDECapability(ExtendedCapability):
         start = self.cap_start
         end = self.cap_end
 
-        print(f"IDE @0x{self.offset:03x} RAW:")
+        print(f"IDE @0x{self.offset:03x} RAW (presented as 32-bit value 0x40302010 and byte sequence (10 20 30 40)):")
 
         for addr in range(start, end, 4):
             chunk = self.cfg.data[addr:min(addr + 4, end)]
-            # pad if last chunk < 4 bytes (edge safety)
-            #chunk = chunk + bytes(4 - len(chunk))
+
+            # Convert bytes to int (little-endian)
+            val = int.from_bytes(chunk, "little")
+
+            # Format bytes
             hex_bytes = " ".join(f"{b:02x}" for b in chunk)
-            print(f"{addr:08x}  {hex_bytes}")
+
+            print(f"{addr:08x}: 0x{val:08x} ({hex_bytes})")
 
     # -----------------------------
     # Parse blocks
@@ -144,13 +148,13 @@ class IDECapability(ExtendedCapability):
         next_ptr = (self.hdr >> 20) & 0xFFF
 
         print("  Header:")
-        print(f"    raw     : 0x{self.hdr:08x}")
+        print(f"    raw     : 0x{self.hdr:08x} ({self.cfg.fmt32(self.hdr)})")
         print(f"    id      : 0x{cap_id:04x}")
         print(f"    version : {version}")
         print(f"    next    : 0x{next_ptr:03x}")
 
         print("  Capability:")
-        print(f"    raw : 0x{self.cap:08x}")
+        print(f"    raw : 0x{self.cap:08x} ({self.cfg.fmt32(self.cap)})")
 
         print("    Features:")
         print(f"      Link IDE Stream           : {_yn(self.link_ide_supported)}")
@@ -170,7 +174,7 @@ class IDECapability(ExtendedCapability):
 
         # --- Control ---
         print("  Control:")
-        print(f"    raw : 0x{self.ctrl:08x}")
+        print(f"    raw : 0x{self.ctrl:08x} ({self.cfg.fmt32(self.ctrl)})")
 
         print("    Features:")
         print(f"      Flow through IDE stream   : {_yn(self.flow_through_ide_stream_enabled)}")
